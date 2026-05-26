@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажёр анализа ситуаций</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&family=Roboto+Slab:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #A710EC;
+            --accent-light: #A710EC14;
+            --accent-hover: #930ED4;
+            --bg: #FAFAFA;
+            --card-bg: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #6B6B6B;
+            --text-tertiary: #9A9A9A;
+            --border: #E8E8E8;
+            --radius: 12px;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 40px 20px 60px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Compact Header */
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .header__title {
+            font-family: 'Roboto Slab', serif;
+            font-weight: 700;
+            font-size: 28px;
+            color: var(--text-primary);
+        }
+
+        /* Sticky Progress */
+        .progress-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(250, 250, 250, 0.9);
+            backdrop-filter: blur(8px);
+            padding: 12px 0 16px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-count { color: var(--accent); font-weight: 500; }
+
+        /* Questions Area */
+        #questionsContainer {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 320px;
+            position: relative;
+        }
+
+        /* Question Card */
+        .question-card {
+            background: var(--card-bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+            padding: 32px;
+            width: 100%;
+        }
+
+        .question-card.active {
+            border-color: #D4A8FF;
+            box-shadow: 0 6px 20px rgba(167, 16, 236, 0.1);
+        }
+
+        /* Animations */
+        .question-card.fade-out {
+            animation: fadeOut 0.3s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.4s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .q-number {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            background: var(--accent-light);
+            color: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .q-text {
+            font-family: 'Roboto Slab', serif;
+            font-weight: 600;
+            font-size: 18px;
+            line-height: 1.4;
+            color: var(--text-primary);
+        }
+
+        .answer-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .answer-field {
+            width: 100%;
+            min-height: 100px;
+            padding: 14px 44px 14px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: #fff;
+            resize: none;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .answer-field:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .btn-next {
+            position: absolute;
+            bottom: 14px;
+            right: 14px;
+            width: 36px;
+            height: 36px;
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: 50%;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+        }
+
+        .btn-next.visible {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        .btn-next:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .btn-next svg { width: 18px; height: 18px; }
+
+        /* Completion View */
+        .completion-view {
+            text-align: center;
+            padding: 40px 24px;
+            width: 100%;
+        }
+
+        .completion-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--accent-light);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .completion-icon svg {
+            width: 36px;
+            height: 36px;
+            color: var(--accent);
+        }
+
+        .completion-title {
+            font-family: 'Roboto Slab', serif;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .completion-text {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 32px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Download Button */
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 40px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 16px rgba(167, 16, 236, 0.25);
+        }
+
+        .btn-download:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(167, 16, 236, 0.35);
+        }
+
+        .btn-download:active {
+            transform: translateY(0);
+        }
+
+        .btn-download svg { width: 20px; height: 20px; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1A1A1A;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast svg { width: 18px; height: 18px; color: #4ADE80; }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container { padding: 30px 16px 40px; }
+            .header__title { font-size: 24px; }
+            .question-card { padding: 24px 20px; }
+            .q-text { font-size: 16px; }
+            .answer-field { font-size: 14px; }
+            .completion-title { font-size: 22px; }
+            .btn-download { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1 class="header__title">Анализ ситуации</h1>
+        </header>
+
+        <div class="progress-wrapper">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <div class="progress-text">
+                <span>Прогресс</span>
+                <span><span class="progress-count" id="progressCount">0</span> / 4</span>
+            </div>
+        </div>
+
+        <div id="questionsContainer"></div>
+    </div>
+
+    <div class="toast" id="toast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span id="toastText">Готово!</span>
+    </div>
+
+    <script>
+        const questionsData = [
+            { id: 0, text: 'Что именно произошло (опиши факт, а не свою интерпретацию)?' },
+            { id: 1, text: 'Это разовая ситуация или повторяющаяся?' },
+            { id: 2, text: 'Как это влияет на процесс обучения / адаптации?' },
+            { id: 3, text: 'Есть ли риск для команды, клиента, результата?' }
+        ];
+
+        const container = document.getElementById('questionsContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressCount = document.getElementById('progressCount');
+        const toast = document.getElementById('toast');
+
+        let currentStep = 0;
+        const answers = {};
+
+        function init() {
+            createCard(0);
+            updateProgress();
+        }
+
+        function createCard(index) {
+            const q = questionsData[index];
+            const card = document.createElement('div');
+            card.className = 'question-card active slide-in';
+            card.dataset.index = index;
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="q-number">${index + 1}</div>
+                    <div class="q-text">${q.text}</div>
+                </div>
+                <div class="answer-wrapper">
+                    <textarea class="answer-field" placeholder="Введите ответ..."></textarea>
+                    <button class="btn-next" title="Далее">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = '';
+            container.appendChild(card);
+            attachEvents(card, index);
+            setTimeout(() => card.querySelector('.answer-field').focus(), 300);
+        }
+
+        function attachEvents(card, index) {
+            const textarea = card.querySelector('.answer-field');
+            const btnNext = card.querySelector('.btn-next');
+
+            textarea.addEventListener('input', function() {
+                const len = this.value.trim().length;
+                answers[index] = this.value.trim();
+                
+                if (len > 0) {
+                    btnNext.classList.add('visible');
+                } else {
+                    btnNext.classList.remove('visible');
+                }
+                
+                this.style.height = 'auto';
+                this.style.height = Math.max(100, this.scrollHeight) + 'px';
+            });
+
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey && btnNext.classList.contains('visible')) {
+                    e.preventDefault();
+                    completeStep(card, index);
+                }
+            });
+
+            btnNext.addEventListener('click', () => {
+                if (btnNext.classList.contains('visible')) {
+                    completeStep(card, index);
+                }
+            });
+        }
+
+        function completeStep(card, index) {
+            answers[index] = card.querySelector('.answer-field').value.trim();
+            card.classList.remove('active');
+            card.classList.add('fade-out');
+
+            setTimeout(() => {
+                currentStep++;
+                updateProgress();
+
+                if (currentStep < questionsData.length) {
+                    createCard(currentStep);
+                } else {
+                    showCompletionView();
+                }
+            }, 300);
+        }
+
+        function showCompletionView() {
+            container.innerHTML = '';
+            const view = document.createElement('div');
+            view.className = 'completion-view slide-in';
+            view.innerHTML = `
+                <div class="completion-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <h2 class="completion-title">Сбор информации завершён</h2>
+                <p class="completion-text">Проанализируй свои ответы.</p>
+                <button class="btn-download" id="downloadBtnFinal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Скачать
+                </button>
+            `;
+            container.appendChild(view);
+            document.getElementById('downloadBtnFinal').addEventListener('click', downloadFile);
+        }
+
+        function updateProgress() {
+            const pct = (currentStep / questionsData.length) * 100;
+            progressBar.style.width = pct + '%';
+            progressCount.textContent = currentStep;
+        }
+
+        function showToast(msg) {
+            document.getElementById('toastText').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function downloadFile() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ru-RU');
+            const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+            let wordContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <title>Анализ ситуации</title>
+                    <style>
+                        body { font-family: 'Arial', sans-serif; color: #1A1A1A; }
+                        h1 { font-family: 'Roboto Slab', serif; font-size: 24px; color: #A710EC; border-bottom: 2px solid #A710EC; padding-bottom: 10px; }
+                        .meta { color: #666; font-size: 12px; margin-bottom: 20px; }
+                        .question { margin-top: 20px; font-weight: bold; font-size: 14px; color: #333; }
+                        .answer { margin-top: 6px; margin-bottom: 10px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Анализ ситуации</h1>
+                    <div class="meta">Дата: ${dateStr}, ${timeStr}</div>
+                    <hr><br>
+            `;
+
+            questionsData.forEach((q, i) => {
+                wordContent += `<div class="question">${i + 1}. ${q.text}</div>`;
+                wordContent += `<div class="answer">${answers[i] || '—'}</div>`;
+            });
+
+            wordContent += `<br><div style="color: #999; font-size: 12px;">Документ сгенерирован автоматически</div></body></html>`;
+
+            const blob = new Blob(['\ufeff', wordContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `анализ_ситуации_${dateStr.replace(/\./g, '-')}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('Файл сохранён');
+        }
+
+        init();
+    </script>
+</body>
+</html>
